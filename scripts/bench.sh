@@ -1,43 +1,50 @@
 #!/usr/bin/env bash
-# Run each benchmark file, capture the tactic execution times for both
-# `by lp` and `by linarith (config := {})` examples, and emit a compact
-# table.
+# Run each benchmark file, capture the elapsed times for both `by lp` and
+# `by linarith (config := {})` examples (via `#time`), median across runs.
 #
 # Usage: ./scripts/bench.sh [N]    (N runs per file; default 5)
-# Output: per-file lp time, linarith time, ratio. Median of N runs.
 
-set -euo pipefail
+set -eo pipefail
 
 RUNS="${1:-5}"
 cd "$(dirname "$0")/.."
 
-# Median of stdin (one number per line).
-median() { sort -n | awk -v n="$(wc -l)" 'NR==int((n+1)/2)'; }
-
-# Extract the tactic-execution time (ms) for the k-th example in a file's
-# profiler output. The file has two `example`s — first `by lp`, second
-# `by linarith`. We grep `tactic execution` lines in order.
-extract_kth() {
-  local file="$1" k="$2"
-  awk '/^\ttactic execution / { print $3 }' "$file" | sed 's/ms$//' | awk -v k="$k" 'NR==k'
+median() {
+  # Read all input, sort, pick the middle line.
+  local tmp; tmp=$(mktemp)
+  sort -n > "$tmp"
+  local n; n=$(wc -l < "$tmp" | tr -d ' ')
+  awk -v k="$(( (n + 1) / 2 ))" 'NR==k' "$tmp"
+  rm "$tmp"
 }
 
-printf "%-12s %-10s %-10s %s\n" "file" "lp (ms)" "linarith (ms)" "ratio (lin/lp)"
-printf "%-12s %-10s %-10s %s\n" "----" "-------" "-------------" "--------------"
+# Extract the k-th `time: <N>ms` value from a file's stdout.
+extract_kth() {
+  local file="$1" k="$2"
+  awk '/^time: / { gsub(/[^0-9]/, "", $2); print $2 }' "$file" | awk -v k="$k" 'NR==k'
+}
+
+printf "%-12s %-12s %-12s %s\n" "file" "lp (ms)" "linarith (ms)" "ratio (lin/lp)"
+printf "%-12s %-12s %-12s %s\n" "----" "-------" "-------------" "--------------"
 
 for bench in Benchmark/*.lean; do
   name=$(basename "$bench" .lean)
   lp_times=()
   lin_times=()
+  fail=0
   for ((r=1; r<=RUNS; r++)); do
     out=$(mktemp)
-    lake env lean "$bench" 2>&1 >"$out" || { echo "$name: FAIL"; rm "$out"; continue 2; }
+    if ! lake env lean "$bench" >"$out" 2>&1; then
+      printf "%-12s FAILED\n" "$name"
+      rm "$out"; fail=1; break
+    fi
     lp_times+=("$(extract_kth "$out" 1)")
     lin_times+=("$(extract_kth "$out" 2)")
     rm "$out"
   done
+  [ $fail -eq 1 ] && continue
   lp_med=$(printf '%s\n' "${lp_times[@]}" | median)
   lin_med=$(printf '%s\n' "${lin_times[@]}" | median)
   ratio=$(echo "scale=2; $lin_med / $lp_med" | bc)
-  printf "%-12s %-10s %-10s %s\n" "$name" "$lp_med" "$lin_med" "${ratio}x"
+  printf "%-12s %-12s %-12s %sx\n" "$name" "$lp_med" "$lin_med" "$ratio"
 done

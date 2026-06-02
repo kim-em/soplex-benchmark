@@ -6,7 +6,7 @@ import Mathlib.Tactic.Linarith
 import Soplex
 open Soplex Soplex.Verify
 
-set_option profiler true in
+#time
 example (x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 : Rat)
     (_a1 : 0 ≤ x1) (_a2 : 0 ≤ x2) (_a3 : 0 ≤ x3) (_a4 : 0 ≤ x4) (_a5 : 0 ≤ x5)
     (_a6 : 0 ≤ x6) (_a7 : 0 ≤ x7) (_a8 : 0 ≤ x8) (_a9 : 0 ≤ x9) (_a10 : 0 ≤ x10)
@@ -22,7 +22,7 @@ example (x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 
     1/2 + 1/3 + 1/4 + 1/5 + 1/6 + 1/7 + 1/8 + 1/9 + 1/10 + 1/11 +
     1/12 + 1/13 + 1/14 + 1/15 + 1/16 + 1/17 + 1/18 + 1/19 + 1/20 + 1/21 := by lp
 
-set_option profiler true in
+#time
 example (x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 : Rat)
     (_a1 : 0 ≤ x1) (_a2 : 0 ≤ x2) (_a3 : 0 ≤ x3) (_a4 : 0 ≤ x4) (_a5 : 0 ≤ x5)
     (_a6 : 0 ≤ x6) (_a7 : 0 ≤ x7) (_a8 : 0 ≤ x8) (_a9 : 0 ≤ x9) (_a10 : 0 ≤ x10)
