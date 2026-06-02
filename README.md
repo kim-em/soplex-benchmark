@@ -64,3 +64,23 @@ elaboration overhead (cache warmth, etc.) is matched between them.
 - **NonTrivial.lean** — 20 hypotheses `cᵢ · xᵢ ≤ 1` with `cᵢ ∈ 2..21`;
   goal `Σ xᵢ ≤ Σ 1/cᵢ`. Exercises non-trivial Farkas multipliers and
   rational coefficients in both the hypotheses and the goal.
+
+## Results
+
+Median of 5 runs, M1 MacBook, `v4.31.0-rc1`, soplex `d1b3dad`, mathlib at
+PR #40110 head:
+
+| Benchmark   | `by lp` | `by linarith (config := {})` | ratio (lin/lp) |
+|-------------|--------:|-----------------------------:|---------------:|
+| Headline    |   18 ms |                        51 ms |          2.83× |
+| Size5       |   20 ms |                        45 ms |          2.25× |
+| Size10      |   24 ms |                        56 ms |          2.33× |
+| Size20      |   40 ms |                        85 ms |          2.12× |
+| Size40      |   85 ms |                       164 ms |          1.92× |
+| Size80      |  227 ms |                       416 ms |          1.83× |
+| NonTrivial  |   86 ms |                       172 ms |          2.00× |
+
+Geometric mean speedup: **~2.2×** in lp's favour. The lead is widest on
+the small/headline problems (2.8×) and narrows toward 1.8× at n=80.
+
+Reproduce: `./scripts/bench.sh 5`.
