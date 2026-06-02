@@ -73,14 +73,41 @@ PR #40110 head:
 | Benchmark   | `by lp` | `by linarith (config := {})` | ratio (lin/lp) |
 |-------------|--------:|-----------------------------:|---------------:|
 | Headline    |   18 ms |                        51 ms |          2.83× |
-| Size5       |   20 ms |                        45 ms |          2.25× |
-| Size10      |   24 ms |                        56 ms |          2.33× |
-| Size20      |   40 ms |                        85 ms |          2.12× |
-| Size40      |   85 ms |                       164 ms |          1.92× |
-| Size80      |  227 ms |                       416 ms |          1.83× |
-| NonTrivial  |   86 ms |                       172 ms |          2.00× |
+| Size5       |   19 ms |                        45 ms |          2.37× |
+| Size10      |   23 ms |                        56 ms |          2.43× |
+| Size20      |   41 ms |                        85 ms |          2.07× |
+| Size40      |   86 ms |                       161 ms |          1.87× |
+| Size80      |  225 ms |                       409 ms |          1.82× |
+| NonTrivial  |   86 ms |                       170 ms |          1.98× |
 
 Geometric mean speedup: **~2.2×** in lp's favour. The lead is widest on
 the small/headline problems (2.8×) and narrows toward 1.8× at n=80.
 
-Reproduce: `./scripts/bench.sh 5`.
+![Size sweep, log-log](results/size-sweep.png)
+
+![All benchmarks, log scale](results/all-bars.png)
+
+![Speedup ratios](results/ratios.png)
+
+Reproduce: `./scripts/bench.sh 5 && python3 scripts/plot.py`.
+
+## Why `linarith (config := {})` and not bare `linarith`?
+
+A version of Lean's `linarith` extension elaboration evaluates default
+config values lazily at each call, which historically inflated the
+reported time for bare `linarith` by 2–3× on these benchmarks. As of
+the pin used here (`v4.31.0-rc1` + PR #40110), the gap has shrunk
+dramatically. `Benchmark/ConfigSanity.lean` measures both forms on the
+Size40 shape:
+
+| Call form | median ms |
+|---|---:|
+| `by linarith` | 154 |
+| `by linarith (config := {})` | 148 |
+
+So the `(config := {})` form is **~4% faster** than bare `linarith`,
+not 2-3× faster. The choice does not meaningfully affect the comparison;
+the headline ratios above would change by less than 5% in either
+direction. We use `(config := {})` for consistency with our prior
+methodology, and to remove this minor and unrelated noise source from
+the comparison.

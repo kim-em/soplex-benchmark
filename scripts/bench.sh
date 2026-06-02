@@ -3,11 +3,17 @@
 # `by linarith (config := {})` examples (via `#time`), median across runs.
 #
 # Usage: ./scripts/bench.sh [N]    (N runs per file; default 5)
+#
+# Side effect: writes results/median${N}.csv (one row per benchmark:
+# name,lp_ms,linarith_ms) for scripts/plot.py.
 
 set -eo pipefail
 
 RUNS="${1:-5}"
 cd "$(dirname "$0")/.."
+mkdir -p results
+CSV="results/median${RUNS}.csv"
+: > "$CSV"
 
 median() {
   # Read all input, sort, pick the middle line.
@@ -47,4 +53,9 @@ for bench in Benchmark/*.lean; do
   lin_med=$(printf '%s\n' "${lin_times[@]}" | median)
   ratio=$(echo "scale=2; $lin_med / $lp_med" | bc)
   printf "%-12s %-12s %-12s %sx\n" "$name" "$lp_med" "$lin_med" "$ratio"
+  # CSV row: name,lp_ms,linarith_ms — only for the two-example files
+  # (skip ConfigSanity, which has two linarith examples and no lp).
+  if [ "$name" != "ConfigSanity" ]; then
+    printf "%s,%s,%s\n" "$name" "$lp_med" "$lin_med" >> "$CSV"
+  fi
 done
