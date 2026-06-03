@@ -16,7 +16,7 @@ open System Lake DSL
 -/
 
 require Soplex from git "https://github.com/kim-em/soplex" @
-  "d1b3dad767c32d209132fe12c07ff4e6b4e5fa8d"
+  "b22aceb36d32c9b9a3bffa4a8b2a662271df2478"
 
 -- Mathlib at PR #40110 (`perf(Tactic/Linarith): syntactic cache for atom lookup`)
 require Mathlib from git "https://github.com/kim-em/mathlib4" @

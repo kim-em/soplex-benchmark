@@ -11,7 +11,8 @@ for the lp announcement post.
 
 ## Versions pinned
 
-- `Soplex`: kim-em/soplex `d1b3dad` (`bump-v4.31.0-rc1` branch)
+- `Soplex`: kim-em/soplex `b22aceb` (`main`), bundling the
+  carrier-parametrized `lp` engine (kim-em/lp-tactic `main`)
 - `Mathlib`: kim-em/mathlib4 `7a00f329` (linarith with the syntactic
   atom-cache improvement from
   [PR #40110](https://github.com/leanprover-community/mathlib4/pull/40110))
@@ -67,21 +68,23 @@ elaboration overhead (cache warmth, etc.) is matched between them.
 
 ## Results
 
-Median of 5 runs, M1 MacBook, `v4.31.0-rc1`, soplex `d1b3dad`, mathlib at
-PR #40110 head:
+Median of 5 runs, M1 MacBook, `v4.31.0-rc1`, soplex `b22aceb` (main, carrier engine),
+mathlib at PR #40110 head:
 
 | Benchmark   | `by lp` | `by linarith (config := {})` | ratio (lin/lp) |
 |-------------|--------:|-----------------------------:|---------------:|
-| Headline    |   18 ms |                        51 ms |          2.83× |
-| Size5       |   19 ms |                        45 ms |          2.37× |
-| Size10      |   23 ms |                        56 ms |          2.43× |
-| Size20      |   41 ms |                        85 ms |          2.07× |
-| Size40      |   86 ms |                       161 ms |          1.87× |
-| Size80      |  225 ms |                       409 ms |          1.82× |
-| NonTrivial  |   86 ms |                       170 ms |          1.98× |
+| Headline    |   19 ms |                        53 ms |          2.79× |
+| Size5       |   22 ms |                        46 ms |          2.09× |
+| Size10      |   26 ms |                        57 ms |          2.19× |
+| Size20      |   43 ms |                        84 ms |          1.95× |
+| Size40      |   92 ms |                       163 ms |          1.77× |
+| Size80      |  237 ms |                       417 ms |          1.76× |
+| NonTrivial  |   86 ms |                       167 ms |          1.94× |
 
-Geometric mean speedup: **~2.2×** in lp's favour. The lead is widest on
-the small/headline problems (2.8×) and narrows toward 1.8× at n=80.
+Geometric mean speedup: **~2.0×** in lp's favour. The lead is widest on
+the small/headline problems (2.8×) and narrows toward 1.8× at n=80. `lp` runs
+on the carrier-parametrized engine here; its `Rat` path keeps the original `Q`
+fast-path, so these numbers match the pre-generalization engine within noise.
 
 ![Size sweep, log-log](results/size-sweep.png)
 
@@ -90,6 +93,55 @@ the small/headline problems (2.8×) and narrows toward 1.8× at n=80.
 ![Speedup ratios](results/ratios.png)
 
 Reproduce: `./scripts/bench.sh 5 && python3 scripts/plot.py`.
+
+## Multi-carrier sweep (unified `CarrierMethods` engine)
+
+The `lp` tactic was generalized from a `Rat`-only discharger to a single
+carrier-parametrized engine that proves the **same ℚ-Farkas implications**
+over a family of ordered carriers: `Rat` (field), `Real` (field, via Mathlib),
+`Int` (comm ring), `Dyadic` (comm ring, no inverses), and `Nat` (comm
+semiring, no negation). The ℚ LP sent to SoPlex is identical across carriers;
+only the reconstructed proof term differs. (No integer-cut/integrality
+reasoning — that stays with `omega`/`cutsat`; `lp` proves ℚ-valid implications
+only.)
+
+The key performance question: does generalization cost the `Rat` baseline
+anything, and how do the native computable carriers compare? Same box-LP
+shape as `Size{5..80}` above, identical 2n-row structure across carriers,
+median-of-5, same `v4.31.0-rc1` toolchain and carrier engine as the
+`lp`-vs-`linarith` table above:
+
+| size | Nat | Int | Dyadic | Rat | Real | linarith (Rat) |
+|-----:|----:|----:|-------:|----:|-----:|---------------:|
+| 5    | 13  | 15  | 14     | 20  | 35   | 45 |
+| 10   | 12  | 13  | 14     | 17  | 39   | 39 |
+| 20   | 25  | 27  | 28     | 35  | 73   | 66 |
+| 40   | 64  | 69  | 69     | 86  | 153  | 140 |
+| 80   | 190 | 205 | 207    | 229 | 381  | 380 |
+
+Reading:
+
+- **The native computable carriers (`Nat`, `Int`, `Dyadic`) are *faster*
+  than the hand-optimized `Rat` baseline** — 0.65–0.90×. They render
+  coefficients as their own kernel-reducible literals, so per-leaf
+  arithmetic closes by `Eq.refl` with no proof term at all; `Nat` is fastest
+  (most reducible literals). Generalization didn't regress `Rat` — `Rat`
+  keeps its original `Q`-literal fast-path unchanged.
+- **`Real` pays a flat ~1.6–2.3× over `Rat`** — it is non-computable, so
+  coefficients render as `ofRat r` (not defeq to a user literal) and each
+  needs a `userLit = ofRat r` bridge proof. This is inherent to an abstract
+  field and is the *only* carrier that pays it.
+- `lp` still beats `linarith` ~2× on the `Rat` column (the headline story
+  above), and every native carrier widens that lead.
+
+![Multi-carrier sweep, log-log](results/multicarrier-sweep.png)
+
+![Per-carrier box-LP timing](results/multicarrier-bars.png)
+
+![Carrier time relative to Rat](results/multicarrier-ratio.png)
+
+Reproduce: the per-carrier `bench/Bench*.lean` files (box-LP over each carrier,
+`import Soplex`) run median-of-5, then `python3 scripts/plot_multicarrier.py`.
 
 ## Why `linarith (config := {})` and not bare `linarith`?
 
