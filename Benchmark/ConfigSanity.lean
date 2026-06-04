@@ -3,7 +3,7 @@
 -- because it bypasses a config-default-evaluation cost that doubles or
 -- triples bare `linarith`'s reported time on these benchmarks
 -- (discovered while building the fast-discharger prototype, see
--- kim-em/soplex#155). This file just confirms the direction of the
+-- leanprover/lp#155). This file just confirms the direction of the
 -- artifact: `(config := {})` should be FASTER (or at worst equal),
 -- not slower, than bare `linarith`. If `(config := {})` were slower,
 -- our main comparison files would be unfairly penalising linarith.

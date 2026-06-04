@@ -3,8 +3,8 @@
 -- Goal: Σ xᵢ ≤ Σ 1/cᵢ.
 -- The certificate has multiplier 1/cᵢ on hypothesis i.
 import Mathlib.Tactic.Linarith
-import Soplex
-open Soplex Soplex.Verify
+import LP
+open LP LP.Verify
 
 #time
 example (x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 : Rat)

@@ -1,15 +1,19 @@
-# soplex-benchmark
+# lp-benchmark
 
 [![Lean](https://img.shields.io/badge/Lean-4.31.0--rc1-blue.svg)](./lean-toolchain)
 
-Benchmarks comparing the [`lp`](https://github.com/kim-em/soplex) tactic
+> **New here? Start at [`leanprover/lp`](https://github.com/leanprover/lp)** — the entry
+> point for the `lp` / `maximize` tactics and the verified LP solver. This repository is one
+> package of that family: benchmarks of the `lp` tactic against mathlib's `linarith`.
+
+Benchmarks comparing the [`lp`](https://github.com/leanprover/lp) tactic
 against mathlib's [`linarith`](https://github.com/leanprover-community/mathlib4/tree/master/Mathlib/Tactic/Linarith)
 tactic on the same `ℚ`-typed linear arithmetic goals.
 
 This is the companion benchmark repo to
-[`kim-em/soplex`](https://github.com/kim-em/soplex) (the `by lp` tactic,
+[`leanprover/lp`](https://github.com/leanprover/lp) (the `by lp` tactic,
 bundled end to end) and its engine
-[`kim-em/lp-tactic`](https://github.com/kim-em/lp-tactic). See those repos
+[`leanprover/lp-tactic`](https://github.com/leanprover/lp-tactic). See those repos
 for the tactic itself, usage, and examples.
 
 Both tactics close the same set of problems; this repo runs each through
@@ -19,8 +23,8 @@ for the lp announcement post.
 
 ## Versions pinned
 
-- `Soplex`: kim-em/soplex `b22aceb` (`main`), bundling the
-  carrier-parametrized `lp` engine (kim-em/lp-tactic `main`)
+- `LP`: leanprover/lp `b22aceb` (`main`), bundling the
+  carrier-parametrized `lp` engine (leanprover/lp-tactic `main`)
 - `Mathlib`: kim-em/mathlib4 `7a00f329` (linarith with the syntactic
   atom-cache improvement from
   [PR #40110](https://github.com/leanprover-community/mathlib4/pull/40110))
@@ -30,7 +34,7 @@ for the lp announcement post.
 
 ```sh
 lake exe cache get      # download mathlib oleans
-lake build              # build Soplex (compiles vendored SoPlex; ~2-3 min first time)
+lake build              # build LP (compiles vendored SoPlex; ~2-3 min first time)
 ```
 
 ## Run
@@ -55,7 +59,7 @@ example ... := by linarith (config := {})
 We use `linarith (config := {})` rather than bare `linarith` because the
 latter triggers a config-default-evaluation cost that is unrelated to the
 discharger work itself and roughly doubles the apparent linarith time
-(see the [fast-discharger work](https://github.com/kim-em/soplex/issues/155)
+(see the [fast-discharger work](https://github.com/leanprover/lp/issues/155)
 for details on that artifact).
 
 The script `scripts/bench.sh` runs each benchmark `N` times (default 5),
@@ -149,7 +153,7 @@ Reading:
 ![Carrier time relative to Rat](results/multicarrier-ratio.png)
 
 Reproduce: the per-carrier `bench/Bench*.lean` files (box-LP over each carrier,
-`import Soplex`) run median-of-5, then `python3 scripts/plot_multicarrier.py`.
+`import LP`) run median-of-5, then `python3 scripts/plot_multicarrier.py`.
 
 ## Why `linarith (config := {})` and not bare `linarith`?
 

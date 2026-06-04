@@ -3,11 +3,11 @@ open System Lake DSL
 
 /-! # `soplex-benchmark` build configuration
 
-  Benchmarks comparing the `lp` tactic (from `kim-em/soplex`) against
+  Benchmarks comparing the `lp` tactic (from `leanprover/lp`) against
   mathlib's `linarith` tactic (at PR #40110 — linarith with the syntactic
   atom-cache improvement).
 
-  Both `Soplex` and `Mathlib` are required, pinned to commits/branches
+  Both `LP` and `Mathlib` are required, pinned to commits/branches
   that share the `leanprover/lean4:v4.31.0-rc1` toolchain.
 
   Build: `lake exe cache get` then `lake build`. Run a benchmark file
@@ -15,8 +15,8 @@ open System Lake DSL
   `tactic execution` line from the profiler output.
 -/
 
-require Soplex from git "https://github.com/kim-em/soplex" @
-  "b22aceb36d32c9b9a3bffa4a8b2a662271df2478"
+require LP from git "https://github.com/leanprover/lp" @
+  "af0e65b4b9284bfdeabba78426c0a54563bcb1c5"
 
 -- Mathlib at PR #40110 (`perf(Tactic/Linarith): syntactic cache for atom lookup`)
 require Mathlib from git "https://github.com/kim-em/mathlib4" @
