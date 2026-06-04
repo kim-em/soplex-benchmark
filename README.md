@@ -1,8 +1,16 @@
 # soplex-benchmark
 
+[![Lean](https://img.shields.io/badge/Lean-4.31.0--rc1-blue.svg)](./lean-toolchain)
+
 Benchmarks comparing the [`lp`](https://github.com/kim-em/soplex) tactic
 against mathlib's [`linarith`](https://github.com/leanprover-community/mathlib4/tree/master/Mathlib/Tactic/Linarith)
 tactic on the same `ℚ`-typed linear arithmetic goals.
+
+This is the companion benchmark repo to
+[`kim-em/soplex`](https://github.com/kim-em/soplex) (the `by lp` tactic,
+bundled end to end) and its engine
+[`kim-em/lp-tactic`](https://github.com/kim-em/lp-tactic). See those repos
+for the tactic itself, usage, and examples.
 
 Both tactics close the same set of problems; this repo runs each through
 Lean's `set_option profiler true` and reads off the `tactic execution`
