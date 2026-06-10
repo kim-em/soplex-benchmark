@@ -16,7 +16,7 @@ open System Lake DSL
 -/
 
 require LP from git "https://github.com/leanprover/lp" @
-  "5d1bf9675627cc2c5c0cdf2e2ea017eef380e62e"
+  "6b5953667e16ae2beee9dcc3ab8411203df53a89"
 
 -- Mathlib at PR #40110 (`perf(Tactic/Linarith): syntactic cache for atom lookup`)
 require Mathlib from git "https://github.com/kim-em/mathlib4" @
@@ -24,5 +24,11 @@ require Mathlib from git "https://github.com/kim-em/mathlib4" @
 
 package SoplexBenchmark
 
+/-- `lake build` sanity target: elaborates one `by lp` and one
+    `by linarith` example so CI proves the pins resolve and both
+    tactics work. The profiling files (`Benchmark/Size*.lean`,
+    `bench/Bench*.lean`) are driven by `scripts/bench.sh` via
+    `lake env lean`, not built as part of this target. -/
 @[default_target]
-lean_lib SoplexBenchmark
+lean_lib Benchmark where
+  roots := #[`Benchmark.Sanity]

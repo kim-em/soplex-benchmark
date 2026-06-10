@@ -23,8 +23,9 @@ for the lp announcement post.
 
 ## Versions pinned
 
-- `LP`: leanprover/lp `b22aceb` (`main`), bundling the
-  carrier-parametrized `lp` engine (leanprover/lp-tactic `main`)
+- `LP`: leanprover/lp `6b59536` (`main`), bundling the
+  carrier-parametrized `lp` engine (leanprover/lp-tactic `main`) —
+  the exact SHA is the `require LP` pin in [`lakefile.lean`](./lakefile.lean)
 - `Mathlib`: kim-em/mathlib4 `7a00f329` (linarith with the syntactic
   atom-cache improvement from
   [PR #40110](https://github.com/leanprover-community/mathlib4/pull/40110))
@@ -56,11 +57,13 @@ set_option profiler true in
 example ... := by linarith (config := {})
 ```
 
-We use `linarith (config := {})` rather than bare `linarith` because the
-latter triggers a config-default-evaluation cost that is unrelated to the
-discharger work itself and roughly doubles the apparent linarith time
-(see the [fast-discharger work](https://github.com/leanprover/lp/issues/155)
-for details on that artifact).
+We use `linarith (config := {})` rather than bare `linarith` for
+consistency with our earlier methodology and to remove a small,
+unrelated config-default-evaluation cost from the comparison. At the
+pins used here the difference is about 4% (see the measurement in
+"Why `linarith (config := {})`…" below — historically it was 2–3×;
+the [fast-discharger work](https://github.com/leanprover/lp/issues/155)
+has details on that artifact).
 
 The script `scripts/bench.sh` runs each benchmark `N` times (default 5),
 extracts the two `tactic execution` lines, medians across runs, and
