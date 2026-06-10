@@ -1,7 +1,7 @@
 import Lake
 open System Lake DSL
 
-/-! # `soplex-benchmark` build configuration
+/-! # `lp-benchmark` build configuration
 
   Benchmarks comparing the `lp` tactic (from `leanprover/lp`) against
   mathlib's `linarith` tactic (at PR #40110 — linarith with the syntactic
@@ -22,7 +22,7 @@ require LP from git "https://github.com/leanprover/lp" @
 require Mathlib from git "https://github.com/kim-em/mathlib4" @
   "7a00f3296b6766ea09eb22ace0f62001af122f7a"
 
-package SoplexBenchmark
+package LPBenchmark
 
 /-- `lake build` sanity target: elaborates one `by lp` and one
     `by linarith` example so CI proves the pins resolve and both
