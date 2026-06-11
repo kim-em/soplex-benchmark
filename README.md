@@ -23,7 +23,7 @@ for the lp announcement post.
 
 ## Versions pinned
 
-- `LP`: leanprover/lp `ea9a0d5` (`main`), bundling the
+- `LP`: leanprover/lp `f584572` (`main`), bundling the
   carrier-parametrized `lp` engine (leanprover/lp-tactic `main`) —
   the exact SHA is the `require LP` pin in [`lakefile.lean`](./lakefile.lean)
 - `Mathlib`: kim-em/mathlib4 `7a00f329` (linarith with the syntactic
