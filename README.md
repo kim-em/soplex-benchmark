@@ -83,23 +83,26 @@ elaboration overhead (cache warmth, etc.) is matched between them.
 
 ## Results
 
-Median of 5 runs, M1 MacBook, `v4.31.0-rc1`, soplex `b22aceb` (main, carrier engine),
-mathlib at PR #40110 head:
+Median of 5 runs, M1 MacBook, `v4.31.0-rc1`, lp `ea9a0d5` (main: carrier
+engine + the index-cache / fused-accumulation normalizer work and the
+packed-bytes FFI marshalling), mathlib at PR #40110 head:
 
 | Benchmark   | `by lp` | `by linarith (config := {})` | ratio (lin/lp) |
 |-------------|--------:|-----------------------------:|---------------:|
-| Headline    |   19 ms |                        53 ms |          2.79× |
-| Size5       |   22 ms |                        46 ms |          2.09× |
-| Size10      |   26 ms |                        57 ms |          2.19× |
-| Size20      |   43 ms |                        84 ms |          1.95× |
-| Size40      |   92 ms |                       163 ms |          1.77× |
-| Size80      |  237 ms |                       417 ms |          1.76× |
-| NonTrivial  |   86 ms |                       167 ms |          1.94× |
+| Headline    |   16 ms |                        46 ms |          2.87× |
+| Size5       |   18 ms |                        40 ms |          2.22× |
+| Size10      |   22 ms |                        52 ms |          2.36× |
+| Size20      |   37 ms |                        77 ms |          2.08× |
+| Size40      |   76 ms |                       149 ms |          1.96× |
+| Size80      |  197 ms |                       385 ms |          1.95× |
+| NonTrivial  |   55 ms |                       155 ms |          2.81× |
 
-Geometric mean speedup: **~2.0×** in lp's favour. The lead is widest on
-the small/headline problems (2.8×) and narrows toward 1.8× at n=80. `lp` runs
-on the carrier-parametrized engine here; its `Rat` path keeps the original `Q`
-fast-path, so these numbers match the pre-generalization engine within noise.
+Geometric mean speedup: **~2.3×** in lp's favour (up from ~2.0× before the
+post-release performance work landed). The lead is widest on the
+small/headline problems and on rational-coefficient problems
+(NonTrivial: 1.94× → 2.81×, the largest single improvement — the
+normalizer's index-cache and fused-accumulation work), and stays near 2×
+out to n=80.
 
 ![Size sweep, log-log](results/size-sweep.png)
 
@@ -128,21 +131,22 @@ median-of-5, same `v4.31.0-rc1` toolchain and carrier engine as the
 
 | size | Nat | Int | Dyadic | Rat | Real | linarith (Rat) |
 |-----:|----:|----:|-------:|----:|-----:|---------------:|
-| 5    | 13  | 15  | 14     | 20  | 35   | 45 |
-| 10   | 12  | 13  | 14     | 17  | 39   | 39 |
-| 20   | 25  | 27  | 28     | 35  | 73   | 66 |
-| 40   | 64  | 69  | 69     | 86  | 153  | 140 |
-| 80   | 190 | 205 | 207    | 229 | 381  | 380 |
+| 5    | 14  | 14  | 15     | 19  | 33   | 42 |
+| 10   | 11  | 12  | 12     | 13  | 36   | 34 |
+| 20   | 23  | 25  | 25     | 28  | 67   | 57 |
+| 40   | 56  | 61  | 63     | 67  | 137  | 128 |
+| 80   | 166 | 173 | 178    | 195 | 322  | 369 |
 
 Reading:
 
 - **The native computable carriers (`Nat`, `Int`, `Dyadic`) are *faster*
-  than the hand-optimized `Rat` baseline** — 0.65–0.90×. They render
+  than the hand-optimized `Rat` baseline** — 0.75–0.90×. They render
   coefficients as their own kernel-reducible literals, so per-leaf
   arithmetic closes by `Eq.refl` with no proof term at all; `Nat` is fastest
-  (most reducible literals). Generalization didn't regress `Rat` — `Rat`
-  keeps its original `Q`-literal fast-path unchanged.
-- **`Real` pays a flat ~1.6–2.3× over `Rat`** — it is non-computable, so
+  (most reducible literals). The gap narrowed slightly with the
+  post-release normalizer work, which benefits every carrier but `Rat`
+  most.
+- **`Real` pays a flat ~1.7–2.8× over `Rat`** — it is non-computable, so
   coefficients render as `ofRat r` (not defeq to a user literal) and each
   needs a `userLit = ofRat r` bridge proof. This is inherent to an abstract
   field and is the *only* carrier that pays it.
@@ -155,8 +159,9 @@ Reading:
 
 ![Carrier time relative to Rat](results/multicarrier-ratio.png)
 
-Reproduce: the per-carrier `bench/Bench*.lean` files (box-LP over each carrier,
-`import LP`) run median-of-5, then `python3 scripts/plot_multicarrier.py`.
+Reproduce: `./scripts/bench_multicarrier.sh 5` (runs the per-carrier
+`bench/Bench*.lean` box-LP files median-of-5 and writes the CSV), then
+`python3 scripts/plot_multicarrier.py`.
 
 ## Why `linarith (config := {})` and not bare `linarith`?
 
@@ -169,10 +174,10 @@ Size40 shape:
 
 | Call form | median ms |
 |---|---:|
-| `by linarith` | 154 |
-| `by linarith (config := {})` | 148 |
+| `by linarith` | 142 |
+| `by linarith (config := {})` | 131 |
 
-So the `(config := {})` form is **~4% faster** than bare `linarith`,
+So the `(config := {})` form is **~8% faster** than bare `linarith`,
 not 2-3× faster. The choice does not meaningfully affect the comparison;
 the headline ratios above would change by less than 5% in either
 direction. We use `(config := {})` for consistency with our prior
