@@ -15,6 +15,18 @@ mkdir -p results
 CSV="results/median${RUNS}.csv"
 : > "$CSV"
 
+# Since LP's module-system migration, `lake env lean <file>` does not
+# auto-load the precompiled FFI dynlibs, so `by lp` aborts with "Could
+# not find native implementation of 'LP.solveExactFlat'". Pass them
+# explicitly, the same way `leanprover/lp`'s own test runner does.
+DYNLIB_ARGS=()
+for lib in .lake/packages/LPCore/.lake/build/lib/libLPCore_LPCore.* \
+           .lake/packages/SoplexFFI/.lake/build/lib/libSoplexFFI_SoplexFFI.*; do
+  case "$lib" in
+    *.dylib|*.so|*.dll) DYNLIB_ARGS+=("--load-dynlib" "$lib") ;;
+  esac
+done
+
 median() {
   # Read all input, sort, pick the middle line.
   local tmp; tmp=$(mktemp)
@@ -35,12 +47,14 @@ printf "%-12s %-12s %-12s %s\n" "----" "-------" "-------------" "--------------
 
 for bench in Benchmark/*.lean; do
   name=$(basename "$bench" .lean)
+  # Sanity is the `lake build` target (no #time lines), not a benchmark.
+  [ "$name" = "Sanity" ] && continue
   lp_times=()
   lin_times=()
   fail=0
   for ((r=1; r<=RUNS; r++)); do
     out=$(mktemp)
-    if ! lake env lean "$bench" >"$out" 2>&1; then
+    if ! lake env lean "${DYNLIB_ARGS[@]}" "$bench" >"$out" 2>&1; then
       printf "%-12s FAILED\n" "$name"
       rm "$out"; fail=1; break
     fi
