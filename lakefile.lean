@@ -16,7 +16,7 @@ open System Lake DSL
 -/
 
 require LP from git "https://github.com/leanprover/lp" @
-  "6b5953667e16ae2beee9dcc3ab8411203df53a89"
+  "ea9a0d5712352ff88ce556945ffdc4f9e5b7a5e4"
 
 -- Mathlib at PR #40110 (`perf(Tactic/Linarith): syntactic cache for atom lookup`)
 require Mathlib from git "https://github.com/kim-em/mathlib4" @
